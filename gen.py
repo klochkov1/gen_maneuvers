@@ -1,5 +1,6 @@
 # This script generates maneuvers for an "intruder" we are working with.
 # Flights at typical speed (base flight) always alternate with a maneuver (turn, altitude change, or acceleration).
+# Base flights and maneuvers have random duration and other parameters, but values are limitied byt the parameters below.
 
 # Script replaces the intruder block in the input params file. It can write the result to new file with suffix specified in the `result_file_suffix` variable.
 
@@ -64,7 +65,7 @@ def add_maneuver(state_block, duration):
     }}
   }}
 """
-    # Then we update the time so the next maneuver know when it starts and end this maneuver
+    # Then we update the time so the next maneuver know when it starts, the start of the new maneuver is the end of the previous one
     time += duration
     return maneuver_block
 
