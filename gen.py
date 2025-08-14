@@ -14,25 +14,25 @@ result_file_suffix = ".tmp"
 # Increasing the number of maneuvers increases the initialization time of the simulation
 num_maneuvers = 20
 
-# Initial state of the intruder. 
+# Initial state of the intruder relative to strating point 
 x = random.choice([-1, 1]) * random.randint(1500, 5000)
 y = random.choice([-1, 1]) * random.randint(1500, 5000)
-# initial altitude
-z = random.randint(500, 2000)
+z = -1 * random.randint(400, 2000)
 # heading azimuth
 heading = random.randint(0, 360) 
 
 # Base flight params
 speed_min = 40 
 speed_max = 65
-basic_flight_duration_min = 10
-basic_flight_duration_max = 30
+# basic_flight_duration_min = 10
+basic_flight_duration_min = 5
+basic_flight_duration_max = 25
 
 # Altitude change config
-altitude_min = 500
-altitude_max = 3000
+altitude_min = 600
+altitude_max = 3800
 climb_delta_min = 100
-climb_delta_max = 1000
+climb_delta_max = 1200
 climb_delta_step = 10
 climb_rate_div_min = 10
 climb_rate_div_max = 20
@@ -44,9 +44,9 @@ turn_rate_max = 5
 
 # Speed acceleration config
 acceleration_min = 70
-acceleration_max = 90
+acceleration_max = 95
 acceleration_duration_min = 5
-acceleration_duration_max = 10
+acceleration_duration_max = 15
 
 # Global vars
 time = 5
