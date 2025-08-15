@@ -22,7 +22,7 @@ y = random.choice([-1, 1]) * random.randint(2000, 5000)
 heading = random.randint(0, 360) 
 
 # Base flight params
-speed_min = 35
+speed_min = 40
 speed_max = 60
 # basic_flight_duration_min = 10
 basic_flight_duration_min = 5
