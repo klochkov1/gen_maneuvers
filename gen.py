@@ -26,7 +26,7 @@ speed_min = 38
 speed_max = 62
 # basic_flight_duration_min = 10
 basic_flight_duration_min = 5
-basic_flight_duration_max = 25
+basic_flight_duration_max = 20
 
 # Altitude change config
 altitude_min = 600
