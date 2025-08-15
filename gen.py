@@ -16,8 +16,8 @@ result_file_suffix = ".tmp"
 num_maneuvers = 20
 
 # Initial state of the intruder relative to the strating point 
-x = random.choice([-1, 1]) * random.randint(1500, 5000)
-y = random.choice([-1, 1]) * random.randint(1500, 5000)
+x = random.choice([-1, 1]) * random.randint(2000, 5000)
+y = random.choice([-1, 1]) * random.randint(2000, 5000)
 # heading azimuth
 heading = random.randint(0, 360) 
 
