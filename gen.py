@@ -16,8 +16,8 @@ result_file_suffix = ".tmp"
 num_maneuvers = 20
 
 # Initial state of the intruder relative to the strating point 
-x = random.choice([-1, 1]) * random.randint(2000, 5000)
-y = random.choice([-1, 1]) * random.randint(2000, 5000)
+x = random.choice([-1, 1]) * random.randint(2000, 6000)
+y = random.choice([-1, 1]) * random.randint(2000, 6000)
 # heading azimuth
 heading = random.randint(0, 360) 
 
@@ -25,8 +25,8 @@ heading = random.randint(0, 360)
 speed_min = 38
 speed_max = 62
 # basic_flight_duration_min = 10
-basic_flight_duration_min = 5
-basic_flight_duration_max = 20
+basic_flight_duration_min = 3
+basic_flight_duration_max = 25
 
 # Altitude change config
 altitude_min = 600
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     current_altitude = h_ref_asl + initial_offset
     initial_z = h_ref_asl - current_altitude
 
-    landing_time = random.randint(270, 420)
+    landing_time = random.randint(270, 450)
     while time < landing_time:
         maneuvers.append(basic_flight())
         maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
