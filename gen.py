@@ -37,7 +37,7 @@ climb_delta_step = 10
 climb_rate_min_climb = 5
 climb_rate_max_climb = 10
 climb_rate_min_descent = 5
-climb_rate_max_descent = 15
+climb_rate_max_descent = 20
 speed_change_climb = 5  # Static speed reduction during climb (m/s)
 
 # Turn config
@@ -122,6 +122,19 @@ def accelerate():
     
     return add_maneuver(f"horizontal_speed: {speed}", duration)
 
+def land():
+    global current_altitude, current_speed
+    if current_altitude <= 0:
+        return add_maneuver(f"""horizontal_speed: 0
+      climb_rate: 0""", 1)
+    rate = random.randint(climb_rate_min_descent, climb_rate_max_descent)
+    delta = -current_altitude
+    duration = max(1, abs(delta) // rate)
+    current_altitude = 0
+    current_speed = 0
+    return add_maneuver(f"""horizontal_speed: 0
+      climb_rate: {-rate}""", duration)
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Error: Please provide the input params.txt file to write intruder maneuvers there.")
@@ -139,8 +152,9 @@ if __name__ == "__main__":
     current_altitude = h_ref_asl + initial_offset
     initial_z = h_ref_asl - current_altitude
 
-    # Generate maneuvers sequence
-    for _ in range(num_maneuvers):
+    # Generate maneuvers for ~6 minutes, then finalize with descent-to-0 & speed=0
+    target_min_seconds = 360  # 6 minutes
+    while time < target_min_seconds:
         maneuvers.append(basic_flight())
         maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
         if maneuver_type == "turn":
@@ -149,6 +163,9 @@ if __name__ == "__main__":
             maneuvers.append(change_altitude())
         elif maneuver_type == "acceleration":
             maneuvers.append(accelerate())
+
+    # final maneuver
+    maneuvers.append(land())
 
     new_block = f"""
 intruder {{
