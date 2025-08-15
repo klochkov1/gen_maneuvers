@@ -22,8 +22,8 @@ y = random.choice([-1, 1]) * random.randint(2000, 5000)
 heading = random.randint(0, 360) 
 
 # Base flight params
-speed_min = 40 
-speed_max = 65
+speed_min = 40
+speed_max = 60
 # basic_flight_duration_min = 10
 basic_flight_duration_min = 5
 basic_flight_duration_max = 25
@@ -56,7 +56,7 @@ acceleration_duration_max = 15
 time = 5
 current_speed = 50  # Initial cruise speed
 maneuvers = []
-current_altitude = None  # ASL will be calculated based on the reference altitude from the params file
+current_altitude = None 
 
 def add_maneuver(state_block, duration):
     global time
@@ -132,16 +132,14 @@ if __name__ == "__main__":
     with open(input_file, "r") as f:
         content = f.read()
 
-    # read reference altitude (ASL) from "altitude: <number>"
     m = re.search(r'^\s*altitude:\s*([+-]?\d+)\s*$', content, flags=re.MULTILINE)
     h_ref_asl = int(m.group(1)) if m else 200
 
-    # initial absolute altitude ASL; old logic was z = -rand(400..2000) -> here h_ASL = h_ref_asl + rand(400..2000)
     initial_offset = random.randint(400, 2000)
     current_altitude = h_ref_asl + initial_offset
-    initial_z = h_ref_asl - current_altitude  # NED.z for initial_state
+    initial_z = h_ref_asl - current_altitude
 
-    # Generate maneuvers sequence (ALT in ASL internally)
+    # Generate maneuvers sequence
     for _ in range(num_maneuvers):
         maneuvers.append(basic_flight())
         maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
