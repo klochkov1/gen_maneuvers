@@ -16,15 +16,14 @@ result_file_suffix = ".tmp"
 num_maneuvers = 20
 
 # Initial state of the intruder relative to the strating point 
-x = random.choice([-1, 1]) * random.randint(2000, 6000)
-y = random.choice([-1, 1]) * random.randint(2000, 6000)
+x = random.choice([-1, 1]) * random.randint(2000, 5500) # the range in which the intruder can be located relative to the starting point
+y = random.choice([-1, 1]) * random.randint(2000, 5500)
 # heading azimuth
 heading = random.randint(0, 360) 
 
 # Base flight params
 speed_min = 38
 speed_max = 62
-# basic_flight_duration_min = 10
 basic_flight_duration_min = 3
 basic_flight_duration_max = 25
 
@@ -37,13 +36,13 @@ climb_delta_step = 10
 climb_rate_min_climb = 5
 climb_rate_max_climb = 10
 climb_rate_min_descent = 5
-climb_rate_max_descent = 20
+climb_rate_max_descent = 15
 speed_change_climb = 5  # Static speed reduction during climb (m/s)
 
 # Turn config
 turn_angle_min = 10
 turn_angle_max = 100
-turn_rate_min = 3  
+turn_rate_min = 2
 turn_rate_max = 15
 
 # Speed acceleration config
