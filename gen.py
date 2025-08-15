@@ -14,7 +14,7 @@ result_file_suffix = ".tmp"
 # Increasing the number of maneuvers increases the initialization time of the simulation
 num_maneuvers = 20
 
-# Initial state of the intruder relative to strating point 
+# Initial state of the intruder relative to the strating point 
 x = random.choice([-1, 1]) * random.randint(1500, 5000)
 y = random.choice([-1, 1]) * random.randint(1500, 5000)
 z = -1 * random.randint(400, 2000)
@@ -30,17 +30,21 @@ basic_flight_duration_max = 25
 
 # Altitude change config
 altitude_min = 600
-altitude_max = 3800
+altitude_max = 3000
 climb_delta_min = 100
-climb_delta_max = 1200
+climb_delta_max = 1000
 climb_delta_step = 10
-climb_rate_div_min = 10
-climb_rate_div_max = 20
+climb_rate_min_climb = 5
+climb_rate_max_climb = 10
+climb_rate_min_descent = 5
+climb_rate_max_descent = 15
+speed_change_climb = 5  # Static speed reduction during climb (m/s)
 
 # Turn config
-turn_angle_max = 90
-turn_rate_min = 1  # degrees per second
-turn_rate_max = 5
+turn_angle_min = 10
+turn_angle_max = 100
+turn_rate_min = 3  
+turn_rate_max = 15
 
 # Speed acceleration config
 acceleration_min = 70
@@ -50,13 +54,14 @@ acceleration_duration_max = 15
 
 # Global vars
 time = 5
-current_altitude = z
+current_altitude = -z  # Positive altitude (NED: z negative)
+current_speed = 50  # Initial cruise speed
 maneuvers = []
-current_speed = 0
 
 def add_maneuver(state_block, duration):
     global time
-    # Here we set the start time of the maneuver which is the end time of the previous maneuver
+    if duration < 1:
+        duration = 1
     maneuver_block = f"""
   maneuvers {{
     t: {time}
@@ -65,21 +70,22 @@ def add_maneuver(state_block, duration):
     }}
   }}
 """
-    # Then we update the time so the next maneuver know when it starts, the start of the new maneuver is the end of the previous one
     time += duration
     return maneuver_block
 
 def basic_flight():
-    speed = random.randrange(speed_min, speed_max + 1, 5)
+    speed = random.randint(speed_min, speed_max + 1)
+    global current_speed
+    current_speed = speed
     duration = random.randint(basic_flight_duration_min, basic_flight_duration_max)
     return add_maneuver(f"""horizontal_speed: {speed}
       climb_rate: 0
       turn_rate_dps: 0""", duration)
 
 def turn():
-    angle = random.randint(0, turn_angle_max)
+    angle = random.randint(turn_angle_min, turn_angle_max + 1)
     rate = random.randint(turn_rate_min, turn_rate_max)
-    duration = int(round(abs(angle) / rate))
+    duration = max(1, int(round(angle / rate)))
     return add_maneuver(f"turn_rate_dps: {random.choice([-1, 1]) * rate}", duration)
 
 def change_altitude():
@@ -92,15 +98,28 @@ def change_altitude():
     elif new_altitude > altitude_max:
         delta = altitude_max - current_altitude
 
-    rate = max(1, abs(delta) // random.randint(climb_rate_div_min, climb_rate_div_max))
-    duration = abs(delta) // rate
-    current_altitude += delta
+    if delta > 0:
+        rate = random.randint(climb_rate_min_climb, climb_rate_max_climb)
+        adjusted_speed = max(speed_min, current_speed - speed_change_climb)
+    else:
+        rate = random.randint(climb_rate_min_descent, climb_rate_max_descent)
+        adjusted_speed = min(speed_max, current_speed + speed_change_climb)  # No change for descent
 
-    return add_maneuver(f"climb_rate: {rate if delta > 0 else -rate}", duration)
+    duration = max(1, abs(delta) // rate)
+    current_altitude += delta
+    current_speed = adjusted_speed
+
+    climb_rate_value = rate if delta > 0 else -rate
+    return add_maneuver(f"""horizontal_speed: {adjusted_speed}
+      climb_rate: {climb_rate_value}""", duration)
 
 def accelerate():
-    speed = random.randrange(acceleration_min, acceleration_max + 1, 5)
+    speed = random.randint(acceleration_min, acceleration_max)
     duration = random.randint(acceleration_duration_min, acceleration_duration_max)
+    
+    global current_speed
+    current_speed = speed
+    
     return add_maneuver(f"horizontal_speed: {speed}", duration)
 
 # Generate maneuvers sequence
@@ -109,7 +128,7 @@ for _ in range(num_maneuvers):
     maneuvers.append(basic_flight())
 
     # Randomly choose next maneuver
-    maneuver_type = random.choice(["turn", "climb", "acceleration"])
+    maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
     if maneuver_type == "turn":
         maneuvers.append(turn())
     elif maneuver_type == "climb":
@@ -127,7 +146,6 @@ if __name__ == "__main__":
     with open(input_file, "r") as f:
         content = f.read()
 
-    # Create new intruder block
     new_block = f"""
 intruder {{
   initial_state {{
@@ -136,12 +154,11 @@ intruder {{
       y: {y}
       z: {z}
     }}
-    horizontal_speed: 60
+    horizontal_speed: 55
     heading_deg: {heading}
   }}
 """ + "".join(maneuvers) + "}"
 
-    # Find the intruder block by brace counting and replace it
     start = content.find('intruder {')
     if start != -1:
         depth = 0
