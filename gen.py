@@ -125,7 +125,7 @@ def accelerate():
 def land():
     global current_altitude, current_speed
     if current_altitude > 0:
-        rate = 200
+        rate = 150
         delta = -current_altitude
         duration = max(1, abs(delta) // rate)
         current_altitude = 0
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     current_altitude = h_ref_asl + initial_offset
     initial_z = h_ref_asl - current_altitude
 
-    landing_time = random.randint(300, 420)
+    landing_time = random.randint(270, 420)
     while time < landing_time:
         maneuvers.append(basic_flight())
         maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
