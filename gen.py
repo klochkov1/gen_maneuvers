@@ -124,16 +124,22 @@ def accelerate():
 
 def land():
     global current_altitude, current_speed
-    if current_altitude <= 0:
+    if current_altitude > 0:
+        rate = random.randint(climb_rate_min_descent, climb_rate_max_descent)
+        delta = -current_altitude
+        duration = max(1, abs(delta) // rate)
+        current_altitude = 0
+        current_speed = 90
+        first = add_maneuver(f"""horizontal_speed: 90
+      climb_rate: {-rate}""", duration)
+        current_speed = 0
+        second = add_maneuver(f"""horizontal_speed: 0
+      climb_rate: 0""", 1)
+        return first + second
+    else:
+        current_speed = 0
         return add_maneuver(f"""horizontal_speed: 0
       climb_rate: 0""", 1)
-    rate = random.randint(climb_rate_min_descent, climb_rate_max_descent)
-    delta = -current_altitude
-    duration = max(1, abs(delta) // rate)
-    current_altitude = 0
-    current_speed = 0
-    return add_maneuver(f"""horizontal_speed: 0
-      climb_rate: {-rate}""", duration)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -152,9 +158,8 @@ if __name__ == "__main__":
     current_altitude = h_ref_asl + initial_offset
     initial_z = h_ref_asl - current_altitude
 
-    # Generate maneuvers for ~6 minutes, then finalize with descent-to-0 & speed=0
-    target_min_seconds = 360  # 6 minutes
-    while time < target_min_seconds:
+    landing_time = random.randint(360, 480)
+    while time < landing_time:
         maneuvers.append(basic_flight())
         maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
         if maneuver_type == "turn":
@@ -164,7 +169,6 @@ if __name__ == "__main__":
         elif maneuver_type == "acceleration":
             maneuvers.append(accelerate())
 
-    # final maneuver
     maneuvers.append(land())
 
     new_block = f"""
