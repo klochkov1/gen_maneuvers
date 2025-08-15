@@ -5,6 +5,7 @@
 # Script replaces the intruder block in the input params file. It can write the result to new file with suffix specified in the `result_file_suffix` variable.
 
 import random
+import re
 import sys
 
 # result_file_suffix = ""
@@ -17,7 +18,6 @@ num_maneuvers = 20
 # Initial state of the intruder relative to the strating point 
 x = random.choice([-1, 1]) * random.randint(1500, 5000)
 y = random.choice([-1, 1]) * random.randint(1500, 5000)
-z = -1 * random.randint(400, 2000)
 # heading azimuth
 heading = random.randint(0, 360) 
 
@@ -54,9 +54,9 @@ acceleration_duration_max = 15
 
 # Global vars
 time = 5
-current_altitude = -z  # Positive altitude (NED: z negative)
 current_speed = 50  # Initial cruise speed
 maneuvers = []
+current_altitude = None  # ASL will be calculated based on the reference altitude from the params file
 
 def add_maneuver(state_block, duration):
     global time
@@ -89,7 +89,7 @@ def turn():
     return add_maneuver(f"turn_rate_dps: {random.choice([-1, 1]) * rate}", duration)
 
 def change_altitude():
-    global current_altitude
+    global current_altitude, current_speed
     delta = random.choice([-1, 1]) * random.randrange(climb_delta_min, climb_delta_max + 1, climb_delta_step)
     new_altitude = current_altitude + delta
 
@@ -103,7 +103,7 @@ def change_altitude():
         adjusted_speed = max(speed_min, current_speed - speed_change_climb)
     else:
         rate = random.randint(climb_rate_min_descent, climb_rate_max_descent)
-        adjusted_speed = min(speed_max, current_speed + speed_change_climb)  # No change for descent
+        adjusted_speed = min(speed_max, current_speed + speed_change_climb)
 
     duration = max(1, abs(delta) // rate)
     current_altitude += delta
@@ -122,20 +122,6 @@ def accelerate():
     
     return add_maneuver(f"horizontal_speed: {speed}", duration)
 
-# Generate maneuvers sequence
-for _ in range(num_maneuvers):
-    # start with a basic flight
-    maneuvers.append(basic_flight())
-
-    # Randomly choose next maneuver
-    maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
-    if maneuver_type == "turn":
-        maneuvers.append(turn())
-    elif maneuver_type == "climb":
-        maneuvers.append(change_altitude())
-    elif maneuver_type == "acceleration":
-        maneuvers.append(accelerate())
-
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Error: Please provide the input params.txt file to write intruder maneuvers there.")
@@ -146,13 +132,33 @@ if __name__ == "__main__":
     with open(input_file, "r") as f:
         content = f.read()
 
+    # read reference altitude (ASL) from "altitude: <number>"
+    m = re.search(r'^\s*altitude:\s*([+-]?\d+)\s*$', content, flags=re.MULTILINE)
+    h_ref_asl = int(m.group(1)) if m else 200
+
+    # initial absolute altitude ASL; old logic was z = -rand(400..2000) -> here h_ASL = h_ref_asl + rand(400..2000)
+    initial_offset = random.randint(400, 2000)
+    current_altitude = h_ref_asl + initial_offset
+    initial_z = h_ref_asl - current_altitude  # NED.z for initial_state
+
+    # Generate maneuvers sequence (ALT in ASL internally)
+    for _ in range(num_maneuvers):
+        maneuvers.append(basic_flight())
+        maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
+        if maneuver_type == "turn":
+            maneuvers.append(turn())
+        elif maneuver_type == "climb":
+            maneuvers.append(change_altitude())
+        elif maneuver_type == "acceleration":
+            maneuvers.append(accelerate())
+
     new_block = f"""
 intruder {{
   initial_state {{
     position_ned {{
       x: {x}
       y: {y}
-      z: {z}
+      z: {initial_z}
     }}
     horizontal_speed: 55
     heading_deg: {heading}
