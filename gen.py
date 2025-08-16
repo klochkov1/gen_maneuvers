@@ -41,7 +41,7 @@ speed_change_climb = 5  # Static speed reduction during climb (m/s)
 
 # Turn config
 turn_angle_min = 10
-turn_angle_max = 100
+turn_angle_max = 120
 turn_rate_min = 2
 turn_rate_max = 15
 
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     current_altitude = h_ref_asl + initial_offset
     initial_z = h_ref_asl - current_altitude
 
-    landing_time = random.randint(270, 450)
+    landing_time = random.randint(270, 480)
     while time < landing_time:
         maneuvers.append(basic_flight())
         maneuver_type = random.choices(["turn", "climb", "acceleration"], weights=[50, 35, 15])[0]
