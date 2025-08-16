@@ -1,4 +1,4 @@
-# This script generates maneuvers for an "intruder" we are working with.
+# This script generates maneuvers for an intruder.
 # Flights at typical speed (base flight) always alternate with a maneuver (turn, altitude change, or acceleration).
 # Base flights and maneuvers have random duration and other parameters, but values are limitied byt the parameters below.
 
